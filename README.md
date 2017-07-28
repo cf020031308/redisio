@@ -2,7 +2,7 @@ A tiny and fast redis client for script boys.
 
 # Install
 
-TODO: `pip install redisio`
+`pip install redisio`
 
 # Usage
 
