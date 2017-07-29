@@ -2,6 +2,46 @@ import socket
 
 
 class Redis:
+    '''
+    >>> rd = Redis()
+
+    >>> rd('FLUSHALL')(['HMSET', 's', 'x', 3, 'y', 4], ['HGETALL', 's']).next()
+    'OK'
+    >>> next(rd)
+    'OK'
+    >>> rd('SET', 'x', 4)('GET', 'x')[-3]
+    ['x', '3', 'y', '4']
+    >>> list(rd)
+    []
+
+    >>> rd('SET', 'x', 55).strlen('x')
+    2
+
+    >>> r, = rd('HGET', 's', 'x')
+    >>> r
+    '3'
+    >>> r1, r2 = rd('HGET', 's', 'x')('HGET', 's', 'y')
+    >>> r1, r2
+    ('3', '4')
+    >>> cmds = []
+    >>> cmds.append(['ZADD', 'z', 3, 'x', 4, 'y'])
+    >>> cmds.append(['ZRANGE', 'z', 0, -1, 'WITHSCORES'])
+    >>> cmds.append(['DEL', 'z'])
+    >>> r1, r2 = list(rd(*cmds))[:2]
+    >>> r1, r2
+    (2, ['x', '3', 'y', '4'])
+
+    >>> list(rd(['PING'] * 100).__del__()('PING'))
+    ['PONG']
+
+    >>> rd.monitor()
+    'OK'
+
+    >>> rd(*([['PING']] * 10))
+    redisio.Redis('127.0.0.1', 6379)
+    >>> ['PING' in next(rd) for i in range(20)].count(True)
+    10
+    '''
     def __init__(self, host='127.0.0.1', port=6379, db=0, password=''):
         self.host = host
         self.port = port
@@ -83,12 +123,15 @@ class Redis:
         if self.__socket:
             self.__socket.close()
             self.__socket = None
+        return self
 
     def __getitem__(self, key):
         return list(self)[key]
 
     def __getattr__(self, name):
-        return lambda *args: self.__call__(name.upper(), *args)[-1]
+        return (
+            self.__call__ if name.startswith('_')
+            else lambda *args: self.__call__(name.upper(), *args)[-1])
 
     def __str__(self):
         return '%s%s' % (Redis, (self.host, self.port))
