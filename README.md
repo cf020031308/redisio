@@ -55,7 +55,7 @@ assert '3' == rd('SET', 'x', 3)('GET', 'x')('SET', 'x', 4)[-2]
 
 
 Each redis command is mapped to a method with a same name.  
-Calling it in this method-way will send the command, then read all the replies, and return the last one.
+Calling it in this method-like way will send the command, then read all the replies, and return the last one.
 
 ```python
 assert '3' == rd('SET', 'x', 3).get('x')
@@ -87,6 +87,15 @@ rd(*large_scale_of_cmds).__del__()
 Benefit from this the massive insertion is blazingly fast: sending a million of HSET cost only 5.355 seconds via `redisio` while it costs 23.918 seconds via `redis-py`.
 
 *Note*: Replies are buffered on server if the client does not read them but keeps connection alive. This will eventually make the server crash because of the increasing occupied memory. So be aware.
+
+`redisio` will automatically reset the connection before sending a command in the method-like way while there's more than 1024 replies to read.
+
+```python
+rd(*large_scale_of_cmds).dbsize()
+rd(*large_scale_of_cmds)('DBSIZE')[-1]
+```
+
+The former is usually faster than the latter because no massive replies need to be read and parsed.
 
 ### Pub/Sub/Monitor
 

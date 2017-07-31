@@ -5,3 +5,5 @@
 * 0.3
     * Work compatibly with ipython
     * Doctest
+* 0.4
+    * Reset connection to ignore replies after massive insertion.

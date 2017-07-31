@@ -129,9 +129,11 @@ class Redis:
         return list(self)[key]
 
     def __getattr__(self, name):
-        return (
-            self.__call__ if name.startswith('_')
-            else lambda *args: self.__call__(name.upper(), *args)[-1])
+        if name.startswith('-'):
+            return self.__call__
+        if self.reply > 1024:
+            self.__del__()
+        return lambda *args: self.__call__(name.upper(), *args)[-1]
 
     def __str__(self):
         return '%s%s' % (Redis, (self.host, self.port))
