@@ -42,7 +42,9 @@ class Redis:
     >>> ['PING' in next(rd) for i in range(20)].count(True)
     10
     '''
-    def __init__(self, host='127.0.0.1', port=6379, db=0, password=''):
+    def __init__(
+            self, host='127.0.0.1', port=6379, socket='', db=0, password=''):
+        self._socket = socket
         self.host = host
         self.port = port
         self.db = db
@@ -54,8 +56,14 @@ class Redis:
     @property
     def socket(self):
         if not self.__socket:
-            self.__socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-            self.__socket.connect((self.host, self.port))
+            if self._socket:
+                self.__socket = socket.socket(
+                    socket.AF_UNIX, socket.SOCK_STREAM)
+                self.__socket.connect(self._socket)
+            else:
+                self.__socket = socket.socket(
+                    socket.AF_INET, socket.SOCK_STREAM)
+                self.__socket.connect((self.host, self.port))
             self.reply = 0
             self.buffer = ''
             if self.password:
@@ -136,6 +144,9 @@ class Redis:
         return lambda *args: self.__call__(name.upper(), *args)[-1]
 
     def __str__(self):
-        return '%s%s' % (Redis, (self.host, self.port))
+        return '%s(%s)' % (
+            Redis,
+            ('socket="%s"' % self._socket) if self._socket
+            else 'host="%s", port=%s' % (self.host, self.port))
 
     __repr__ = __str__

@@ -17,6 +17,13 @@ rd = redisio.Redis(host='127.0.0.1', port=6379, db=0, password='')
 
 The arguments above are set as default so can be omitted.
 
+Connecting to server via unix sockets is also supported.
+
+```python
+import redisio
+rd = redisio.Redis(socket='/tmp/redis.sock')
+```
+
 ## Commands
 
 See the commands list at [redis.io](https://redis.io/commands).
@@ -88,7 +95,7 @@ Benefit from this the massive insertion is blazingly fast: sending a million of 
 
 *Note*: Replies are buffered on server if the client does not read them but keeps connection alive. This will eventually make the server crash because of the increasing occupied memory. So be aware.
 
-`redisio` will automatically reset the connection before sending a command in the method-like way while there's more than 1024 replies to read.
+`redisio` will automatically reset the connection before sending a command in the method-like way while there are more than 1024 replies to read.
 
 ```python
 rd(*large_scale_of_cmds).dbsize()
