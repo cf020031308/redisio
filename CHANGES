@@ -8,3 +8,6 @@
 * 0.4
     * Reset connection to ignore replies after massive insertion.
     * Support AF_UNIX socket
+* 0.5
+    * A typo not compatible with ipython is fixed.
+    * Alter development status from 3 - Alpha to 5 - Production/Stable

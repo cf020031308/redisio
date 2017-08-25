@@ -38,7 +38,7 @@ class Redis:
     'OK'
 
     >>> rd(*([['PING']] * 10))
-    redisio.Redis('127.0.0.1', 6379)
+    redisio.Redis(host="127.0.0.1", port=6379)
     >>> ['PING' in next(rd) for i in range(20)].count(True)
     10
     '''
@@ -137,8 +137,8 @@ class Redis:
         return list(self)[key]
 
     def __getattr__(self, name):
-        if name.startswith('-'):
-            return self.__call__
+        if name.startswith('_'):
+            return self.__str__()
         if self.reply > 1024:
             self.__del__()
         return lambda *args: self.__call__(name.upper(), *args)[-1]
