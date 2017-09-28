@@ -6,7 +6,7 @@ A tiny and fast redis client for script boys.
 
 # Usage
 
-**WARNING**: The following is the document but don't read it. Instead read [the code](./redisio/redisio.py). It's much shorter.
+**TLDR**: The following is the document but don't read it. Instead read [the code](./redisio/redisio.py). It's much shorter.
 
 ## Initialize
 
@@ -17,7 +17,7 @@ rd = redisio.Redis(host='127.0.0.1', port=6379, db=0, password='')
 
 The arguments above are set as default so can be omitted.
 
-Connecting to server via unix sockets is also supported.
+Connecting via unix sockets is also available.
 
 ```python
 import redisio
@@ -26,15 +26,15 @@ rd = redisio.Redis(socket='/tmp/redis.sock')
 
 ## Commands
 
-See the commands list at [redis.io](https://redis.io/commands).
+See the list of Redis commands at [redis.io](https://redis.io/commands).
 
-Since `redisio` is designed to translate input and output strictly in [protocol](https://redis.io/topics/protocol) with little syntax sugar on calling but not any modification on data itself, any future commands of `redis` can be properly supported without update.
+Since `redisio` is designed to be implemented strictly in [protocol](https://redis.io/topics/protocol) with little syntax sugar on calling but not any modification on data itself, any future commands of `redis` can be properly supported without update.
 
 ### Write I: Commands and Pipelines
 
 Instance `redisio.Redis` is callable.
 
-Any direct calling on it sends the commands (either single command or multiple in list) to server then return itself immediately without reading replies in order to be called in chain conveniently:
+Any direct calling on it sends the commands (either single command or multiple in list) to the server and then return the client instance itself immediately without reading replies in order to be called in chain conveniently:
 
 ```python
 assert rd == rd('SET', 'x', 3)('GET', 'x')(['SET', 'x', 3], ['GET', 'x'])
@@ -42,33 +42,31 @@ assert rd == rd('SET', 'x', 3)('GET', 'x')(['SET', 'x', 3], ['GET', 'x'])
 
 ### Read I: Single Reply
 
-Method `redisio.Redis.next` returns the first reply in queue from server:
+Method `redisio.Redis.next` returns the first reply in the message queue from the server:
 
 ```python
 assert 'OK' == rd('SET', 'x', 3)('GET', 'x').next()
 assert '3' == next(rd)
 ```
 
-*Note*: It will be blocked to call `next` when there's no reply in queue.
+*Note*: It will be blocked to call `next` when the queue is empty.
 
-
-A sepecific reply can be reached by index:
+Reply in the queue can be reached by the index:
 
 ```python
 assert '3' == rd('SET', 'x', 3)('GET', 'x')('SET', 'x', 4)[-2]
 ```
 
-*Note*: It will first iterate the replies queue with a side-effect to empty it.
+*Note*: It will first iterate the whole queue and then return the specific reply, with of course a side-effect to empty the queue.
 
-
-Each redis command is mapped to a method with a same name.  
+Each redis command is mapped to a method with the same name.  
 Calling it in this method-like way will send the command, then read all the replies, and return the last one.
 
 ```python
 assert '3' == rd('SET', 'x', 3).get('x')
 ```
 
-*Note*: It may be blocked to call `rd.shutdown()` because no new reply will be received from server after it's shutdown. `rd('SHUTDOWN')` should be used in this situation.
+*Note*: It will be blocked to call `rd.shutdown()` because this command will never be answered (Dead Men Tell No Tales). `rd('SHUTDOWN')` should be used.
 
 ### Read II: Multiple Replies
 
@@ -85,7 +83,7 @@ r1, r2= list(rd(["GET", key], ("GET", key2))(["SET", "X", "Y"]))[:2]
 
 ### Write II: Massive Insertion
 
-If you want to insert a large amount of data into redis without the care of the results, you can close the connection after sending it to avoid parsing the replies by the use of `del`.
+If you want to insert a large amount of data into redis without the care of the results, you can close the connection after sending it by the use of `del` to avoid parsing the replies.
 
 ```python
 rd(*large_scale_of_cmds).__del__()
@@ -93,7 +91,7 @@ rd(*large_scale_of_cmds).__del__()
 
 Benefit from this the massive insertion is blazingly fast: sending a million of HSET cost only 5.355 seconds via `redisio` while it costs 23.918 seconds via `redis-py`.
 
-*Note*: Replies are buffered on server if the client does not read them but keeps connection alive. This will eventually make the server crash because of the increasing occupied memory. So be aware.
+*Note*: Replies are buffered on the server if the client have not read them while the connection keeps alive. This will eventually make the server crash because of the increasing occupied memory. So be aware.
 
 `redisio` will automatically reset the connection before sending a command in the method-like way while there are more than 1024 replies to read.
 
