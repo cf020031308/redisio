@@ -11,3 +11,5 @@
 * 0.5
     * A typo not compatible with ipython is fixed.
     * Alter development status from 3 - Alpha to 5 - Production/Stable
+* 0.6
+    * Compatible with python3

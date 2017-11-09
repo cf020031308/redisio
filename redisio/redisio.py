@@ -3,14 +3,14 @@ import socket
 
 class Redis:
     '''
-    >>> rd = Redis()
+    >>> rd = Redis()('FLUSHALL')
 
-    >>> rd('FLUSHALL')(['HMSET', 's', 'x', 3, 'y', 4], ['HGETALL', 's']).next()
-    'OK'
-    >>> next(rd)
-    'OK'
-    >>> rd('SET', 'x', 4)('GET', 'x')[-3]
-    ['x', '3', 'y', '4']
+    >>> u'OK' == rd(['HMSET', 's', 'x', 3, 'y', 4], ['HGETALL', 's']).next()
+    True
+    >>> u'OK' == next(rd)
+    True
+    >>> [u'x', u'3', u'y', u'4'] == rd('SET', 'x', 4)('GET', 'x')[-3]
+    True
     >>> list(rd)
     []
 
@@ -18,29 +18,29 @@ class Redis:
     2
 
     >>> r, = rd('HGET', 's', 'x')
-    >>> r
-    '3'
+    >>> r == u'3'
+    True
     >>> r1, r2 = rd('HGET', 's', 'x')('HGET', 's', 'y')
-    >>> r1, r2
-    ('3', '4')
+    >>> (r1, r2) == (u'3', u'4')
+    True
     >>> cmds = []
     >>> cmds.append(['ZADD', 'z', 3, 'x', 4, 'y'])
     >>> cmds.append(['ZRANGE', 'z', 0, -1, 'WITHSCORES'])
     >>> cmds.append(['DEL', 'z'])
     >>> r1, r2 = list(rd(*cmds))[:2]
-    >>> r1, r2
-    (2, ['x', '3', 'y', '4'])
+    >>> (r1, r2) == (2, [u'x', u'3', u'y', u'4'])
+    True
 
-    >>> list(rd(['PING'] * 100).__del__()('PING'))
-    ['PONG']
+    >>> [u'PONG'] == list(rd(['PING'] * 100).__del__()('PING'))
+    True
 
-    >>> rd.monitor()
-    'OK'
+    >>> u'OK' == rd.monitor()
+    True
 
     >>> rd(*([['PING']] * 10))
-    redisio.Redis(host="127.0.0.1", port=6379)
-    >>> ['PING' in next(rd) for i in range(20)].count(True)
-    10
+    Redis(host="127.0.0.1", port=6379)
+    >>> 10 == ['PING' in next(rd) for i in range(20)].count(True)
+    True
     '''
     def __init__(
             self, host='127.0.0.1', port=6379, socket='', db=0, password=''):
@@ -51,7 +51,7 @@ class Redis:
         self.password = password
         self.__socket = None
         self.reply = 0
-        self.buffer = ''
+        self.buffer = b''
 
     @property
     def socket(self):
@@ -65,7 +65,7 @@ class Redis:
                     socket.AF_INET, socket.SOCK_STREAM)
                 self.__socket.connect((self.host, self.port))
             self.reply = 0
-            self.buffer = ''
+            self.buffer = b''
             if self.password:
                 r, = self("AUTH", self.password)
             if self.db:
@@ -84,39 +84,39 @@ class Redis:
                 cmds.insert(0, '*%s' % len(cmds))
                 cmds.append('')
                 msg.append('\r\n'.join(cmds))
-        msg = ''.join(msg)
+        msg = ''.join(msg).encode('utf8')
         try:
             self.socket.sendall(msg)
-        except:
+        except Exception:
             self.__del__()
             self.socket.sendall(msg)
         self.reply += len(args)
         return self
 
     def next(self):
-        while '\r\n' not in self.buffer:
+        while b'\r\n' not in self.buffer:
             self.buffer += self.socket.recv(1024)
         if self.reply > 0:
             self.reply -= 1
-        head = self.buffer[0]
-        body, self.buffer = self.buffer[1:].split('\r\n', 1)
-        if head == '+':
-            return body
-        elif head == ':':
+        head = self.buffer[:1]
+        body, self.buffer = self.buffer[1:].split(b'\r\n', 1)
+        if head == b'+':
+            return body.decode('utf8')
+        elif head == b':':
             return int(body)
-        elif head == '$':
-            if body == '-1':
+        elif head == b'$':
+            if body == b'-1':
                 return None
             body = int(body)
             while len(self.buffer) < body + 2:
                 self.buffer += self.socket.recv(1024)
             body, self.buffer = self.buffer[:body], self.buffer[body+2:]
-            return body
-        elif head == '*':
+            return body.decode('utf8')
+        elif head == b'*':
             body = int(body)
             self.reply += body
             return [self.next() for i in range(body)]
-        elif head == '-':
+        elif head == b'-':
             raise Exception(body)
         raise Exception('Wrong header: %s' % head)
 
@@ -145,8 +145,9 @@ class Redis:
 
     def __str__(self):
         return '%s(%s)' % (
-            Redis,
+            Redis.__name__,
             ('socket="%s"' % self._socket) if self._socket
             else 'host="%s", port=%s' % (self.host, self.port))
 
     __repr__ = __str__
+    __next__ = next
