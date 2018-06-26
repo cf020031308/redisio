@@ -1,4 +1,4 @@
-A tiny and fast redis client for script boys.
+A tiny redis client for script boys with high performance.
 
 # Install
 
@@ -113,7 +113,7 @@ while 1:
 
 # Q&A
 
-Q: Why not using [redis-py](https://github.com/andymccurdy/redis-py) but redisio?
+Q: Why not using [redis-py](https://github.com/andymccurdy/redis-py) but redisio?  
 A: To accomplish the majority of tasks [redis-py](https://github.com/andymccurdy/redis-py) is recommended and mostly used even by myself. Frankly speaking You may never need redisio. redisio is written and optimized especially for massive insertion so it is memory-saving and much faster.
 
 Q: How to use redisio in bash?  
