@@ -17,7 +17,7 @@ setup(
     url='https://github.com/cf020031308/redisio',
     keywords=['Redis', 'key-value store'],
     license='MIT',
-    description='A tiny and fast redis client for script boys.',
+    description='A tiny redis client for script boys with high performance.',
     long_description=commands.getoutput('mdv -A README.md'),
     classifiers=[
         'Development Status :: 5 - Production/Stable',

@@ -13,3 +13,5 @@
     * Alter development status from 3 - Alpha to 5 - Production/Stable
 * 0.6
     * Compatible with python3
+* 0.7
+    * Send in stream to save memory and time

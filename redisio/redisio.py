@@ -77,20 +77,25 @@ class Redis:
             return self
         if not isinstance(args[0], (list, tuple)):
             args = [args]
-        msg = []
-        for arg in args:
-            cmds = ['$%s\r\n%s' % (len(a), a) for a in map(str, arg) if a]
-            if cmds:
-                cmds.insert(0, '*%s' % len(cmds))
-                cmds.append('')
-                msg.append('\r\n'.join(cmds))
-        msg = ''.join(msg).encode('utf8')
-        try:
-            self.socket.sendall(msg)
-        except Exception:
-            self.__del__()
-            self.socket.sendall(msg)
-        self.reply += len(args)
+        e = None
+        for i in range(3):
+            try:
+                length = len(args)
+                for i, arg in enumerate(args):
+                    cmds = [
+                        '$%s\r\n%s' % (len(a), a) for a in map(str, arg) if a]
+                    cmds.insert(0, '*%s' % len(cmds))
+                    cmds.append('')
+                    (
+                        self.socket.sendall if i == length - 1
+                        else self.socket.send
+                    )('\r\n'.join(cmds).encode('utf8'))
+                self.reply += len(args)
+                break
+            except Exception as e:
+                self.__del__()
+        else:
+            raise e
         return self
 
     def next(self):
