@@ -15,3 +15,4 @@
     * Compatible with python3
 * 0.7
     * Send in stream to save memory and time
+    * Remove comamnds module in setup.py to make it installable via pip3.
