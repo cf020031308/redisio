@@ -89,7 +89,7 @@ class Redis:
                     (
                         self.socket.sendall if i == length - 1
                         else self.socket.send
-                    )('\r\n'.join(cmds).encode('utf8'))
+                    )('\r\n'.join(cmds))
                 self.reply += len(args)
                 break
             except Exception as e:
