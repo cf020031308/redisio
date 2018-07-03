@@ -72,6 +72,12 @@ class Redis:
                 r, = self("SELECT", self.db)
         return self.__socket
 
+    def tostring(self, s):
+        try:
+            return s.encode('utf8')
+        except Exception:
+            return s
+
     def __call__(self, *args):
         if not args:
             return self
@@ -89,10 +95,11 @@ class Redis:
                     (
                         self.socket.sendall if i == length - 1
                         else self.socket.send
-                    )('\r\n'.join(cmds))
+                    )(self.tostring('\r\n'.join(cmds)))
                 self.reply += len(args)
                 break
-            except Exception as e:
+            except Exception as _e:
+                e = _e
                 self.__del__()
         else:
             raise e
