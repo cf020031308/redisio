@@ -1,4 +1,4 @@
-from distutils.core import setup
+import setuptools
 
 from redisio import __version__
 
@@ -7,7 +7,7 @@ email = 'cf020031308@163.com'
 with open('README.md') as file:
     desc = file.read()
 
-setup(
+setuptools.setup(
     name='redisio',
     version=__version__,
     author=me,
